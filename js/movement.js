@@ -10,7 +10,7 @@ import { H } from './terrain.js';
 export function createMovement(camera, dom) {
   const keys = new Set();
   const pos = new THREE.Vector3(0, 0, 0); // feet
-  let yaw = Math.PI;                       // face north (down the torii road)
+  let yaw = 0;                             // face north = -Z (down the torii road)
   let pitch = 0;
   let velY = 0;
   let grounded = true;
@@ -73,8 +73,11 @@ export function createMovement(camera, dom) {
         const l = Math.hypot(mx, mz);
         const s = Math.sin(yaw), c = Math.cos(yaw);
         // camera-relative: -z is forward
-        pos.x += ((mx * c - mz * s) / l) * spd * dt;
-        pos.z += ((-mx * s - mz * c) / l) * spd * dt;
+        // right = (cos yaw, 0, -sin yaw), forward = (-sin yaw, 0, -cos yaw);
+        // W gives mz=-1 → +forward. (v1 had the mz sign flipped: W walked
+        // backward — the moedisk playtest bug.)
+        pos.x += ((mx * c + mz * s) / l) * spd * dt;
+        pos.z += ((mz * c - mx * s) / l) * spd * dt;
         bobT += dt * (run ? 11 : 7.5);
       }
       const ground = H(pos.x, pos.z);

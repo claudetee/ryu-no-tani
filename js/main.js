@@ -83,7 +83,9 @@ window.addEventListener('keydown', audioArm);
 
 window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyE') {
-    if (camera.position.distanceTo(scenery.bellPos) < 9) {
+    const dxB = camera.position.x - scenery.bellPos.x;
+    const dzB = camera.position.z - scenery.bellPos.z;
+    if (dxB * dxB + dzB * dzB < 110) {
       scenery.ringBell();
       audio.bell();
       if (!dragon.summoned) {
@@ -92,6 +94,8 @@ window.addEventListener('keydown', (e) => {
         objective('竜に乗れ — press R to ride the guardian');
         toast('The mountain answers. Something vast is descending…', 5200);
       }
+    } else if (!dragon.summoned) {
+      toast('The bell hangs in the small pavilion on the plaza — get closer.');
     }
   }
   if (e.code === 'KeyR') {
@@ -199,3 +203,5 @@ document.getElementById('loading').style.opacity = '0';
 
 // --- harness hooks ---
 window.__ryu = { scene, camera, renderer, movement, dragon, scenery, get stage() { return stage; }, ready: true };
+// in-page e2e: synthetic keys walk the whole quest, results land in the DOM
+if (q.get('selftest') === '1') import('./selftest.js').then((m) => m.runSelfTest(window.__ryu));
