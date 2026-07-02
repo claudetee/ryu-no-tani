@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1a1026">
+<meta property="og:title" content="竜の谷 — Ryū no Tani">
+<meta property="og:description" content="An isekai valley at dusk. Ring the bell, wake the guardian dragon, and fly.">
+<title>竜の谷 — Ryū no Tani</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; padding: 0; overflow: hidden; background: #140d1e; height: 100%; }
+  canvas { display: block; }
+  #experience {
+    position: fixed; inset: 0; z-index: 12; pointer-events: none;
+    font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
+  }
+  #intro {
+    position: absolute; top: max(24px, env(safe-area-inset-top));
+    left: max(24px, env(safe-area-inset-left));
+    width: min(400px, calc(100vw - 48px)); box-sizing: border-box;
+    padding: 22px 24px 20px; border: 1px solid rgba(240, 205, 220, 0.20);
+    border-radius: 22px; color: #f6ecf2;
+    background: linear-gradient(145deg, rgba(30, 16, 38, 0.88), rgba(16, 9, 24, 0.64));
+    box-shadow: 0 22px 70px rgba(0,0,0,0.36), inset 0 1px rgba(255,255,255,0.06);
+    backdrop-filter: blur(20px) saturate(1.15);
+    transition: opacity 0.6s, transform 0.6s;
+  }
+  #intro.hidden { opacity: 0; transform: translateY(-12px); pointer-events: none; }
+  #eyebrow {
+    margin-bottom: 9px; color: #e8a8c0; font-size: 11px;
+    font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+  }
+  h1 { margin: 0 0 8px; font: 500 34px/1.05 Georgia, "Hiragino Mincho ProN", serif; letter-spacing: 0.02em; }
+  h1 small { display: block; font-size: 14px; color: #cfa9be; letter-spacing: 0.22em; margin-top: 4px; }
+  #intro p { margin: 0; color: rgba(246, 236, 242, 0.72); font-size: 14px; line-height: 1.55; }
+  #objective {
+    position: absolute; top: max(20px, env(safe-area-inset-top)); left: 50%;
+    transform: translateX(-50%); padding: 9px 16px; border-radius: 999px;
+    color: #ffe9c9; background: rgba(26, 13, 32, 0.62);
+    border: 1px solid rgba(240, 205, 160, 0.22); backdrop-filter: blur(12px);
+    font-size: 13px; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap;
+    transition: opacity 0.5s; opacity: 0;
+  }
+  #objective.visible { opacity: 1; }
+  #toast {
+    position: absolute; left: 50%; bottom: max(64px, env(safe-area-inset-bottom));
+    transform: translateX(-50%); padding: 10px 18px; border-radius: 999px;
+    color: rgba(255, 240, 228, 0.92); background: rgba(30, 14, 34, 0.72);
+    border: 1px solid rgba(240, 205, 220, 0.18); backdrop-filter: blur(12px);
+    font-size: 13px; white-space: nowrap; opacity: 0; transition: opacity 0.45s;
+  }
+  #toast.visible { opacity: 1; }
+  #hud {
+    position: fixed; left: 12px; bottom: 12px; z-index: 10;
+    font: 11px/1.5 -apple-system, system-ui, sans-serif;
+    color: rgba(255,255,255,0.55); pointer-events: none;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    transition: opacity 0.8s;
+  }
+  #loading {
+    position: fixed; inset: 0; z-index: 20; display: flex;
+    flex-direction: column; gap: 14px;
+    align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at 50% 60%, #241330 0%, #0e0816 70%);
+    color: #b89fc4;
+    font: 14px ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
+    transition: opacity 0.8s; pointer-events: none;
+  }
+  #loading::before {
+    content: '竜の谷';
+    font: 500 46px/1 Georgia, "Hiragino Mincho ProN", serif; letter-spacing: 0.08em; color: #f4e6ee;
+    text-shadow: 0 0 38px rgba(232, 150, 190, 0.3);
+  }
+  #loading::after {
+    content: ''; width: 148px; height: 2px; border-radius: 2px;
+    background: linear-gradient(90deg, transparent, #e896be, transparent);
+    background-size: 200% 100%;
+    animation: loading-sheen 1.6s linear infinite;
+  }
+  @keyframes loading-sheen {
+    from { background-position: 150% 0; }
+    to { background-position: -50% 0; }
+  }
+  @media (max-width: 640px) {
+    #intro { padding: 18px 20px; }
+    h1 { font-size: 29px; }
+  }
+</style>
+</head>
+<body>
+<div id="loading">crossing over…</div>
+<div id="experience">
+  <section id="intro">
+    <div id="eyebrow">A world to fly in</div>
+    <h1>竜の谷 <small>RYŪ NO TANI · DRAGON VALLEY</small></h1>
+    <p>You’ve crossed into another world at dusk. Follow the vermilion torii up the valley,
+       ring the shrine bell to wake the guardian dragon — then press <b>R</b> to ride it
+       through the floating islands.</p>
+  </section>
+  <div id="objective"></div>
+  <div id="toast"></div>
+</div>
+<div id="hud">click to look · WASD walk · shift run · E ring the bell · R ride the dragon</div>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>
